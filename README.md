@@ -5,6 +5,10 @@ Randomly shuffle the rows of a table.  Keywords: sas sql join merge big data ana
     Randomly shuffle the rows of a table
 
     WPS Proc R
+    
+    ee  Paul's Hash solution on end
+    Paul Dorfman
+    sashole@bellsouth.net
 
     see
     https://tinyurl.com/y7bs4tco
@@ -114,4 +118,59 @@ Randomly shuffle the rows of a table.  Keywords: sas sql join merge big data ana
     import r=want data=wrk.want;
     run;quit;
     ');
+
+
+    s
+
+    *____             _
+    |  _ \ __ _ _   _| |
+    | |_) / _` | | | | |
+    |  __/ (_| | |_| | |
+    |_|   \__,_|\__,_|_|
+
+    ;
+
+
+    Roger,
+
+    A nice one-liner. Here's another one (sans proc and quit):
+
+    proc sql ;
+      create table want as select * from sashelp.class order ranuni(1) ;
+    quit ;
+
+    OTOH, advantage can be taken of the fact that the items in a hash object instance are stored randomly by their key-values, so we can simply "extrude" the data set through the h
+
+    data _null_ ;
+      dcl hash h (dataset:"sashelp.class") ;
+      h.definekey  (all:"y") ;
+      h.definedata (all:"y") ;
+      h.definedone () ;
+      h.output (dataset:"want") ;
+      stop ;
+      set sashelp.class ;
+    run ;
+
+    However, it lets the distribution to its own internal devices. Instead, we can shuffle more pointedly:
+
+    data want ;
+      dcl hash h (ordered:"a") ;
+      h.definekey ("_iorc_") ;
+      h.definedata ("_n_") ;
+      h.definedone () ;
+      dcl hiter ih ("h") ;
+      do _n_ = 1 to n ;
+        _iorc_ = ranuni(1) ;
+        h.add() ;
+      end ;
+      do while (ih.next() = 0) ;
+        set sashelp.class point=_n_ nobs=n ;
+        output ;
+      end ;
+      stop ;
+    run ;
+
+    Best regards
+
+
 
